@@ -80,6 +80,15 @@ def edit_calculation_page(request: Request, calc_id: str):
         "calc_id": calc_id
     })
 
+# Delete a specific calculation
+@app.get("/delete-calculation/{calc_id}", response_class=HTMLResponse, tags=["web"])
+def delete_calculation_page(request: Request, calc_id: str):
+    """Render the delete calculation page"""
+    return templates.TemplateResponse("delete_calculation.html", {
+        "request": request,
+        "calc_id": calc_id
+    })
+
 # =====================================================================
 # Health Endpoint
 # =====================================================================
