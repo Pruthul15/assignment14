@@ -58,21 +58,38 @@ def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 # Dashboard page Route
-
 @app.get("/dashboard", response_class=HTMLResponse, tags=["web"])
 def dashboard_page(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
-# ------------------------------------------------------------------------------
+# View a specific calculation
+@app.get("/view-calculation/{calc_id}", response_class=HTMLResponse, tags=["web"])
+def view_calculation_page(request: Request, calc_id: str):
+    """Render the view calculation page"""
+    return templates.TemplateResponse("view_calculation.html", {
+        "request": request,
+        "calc_id": calc_id
+    })
+
+# Edit a specific calculation
+@app.get("/edit-calculation/{calc_id}", response_class=HTMLResponse, tags=["web"])
+def edit_calculation_page(request: Request, calc_id: str):
+    """Render the edit calculation page"""
+    return templates.TemplateResponse("edit_calculation.html", {
+        "request": request,
+        "calc_id": calc_id
+    })
+
+# =====================================================================
 # Health Endpoint
-# ------------------------------------------------------------------------------
+# =====================================================================
 @app.get("/health", tags=["health"])
 def read_health():
     return {"status": "ok"}
 
-# ------------------------------------------------------------------------------
+# =====================================================================
 # User Registration Endpoint
-# ------------------------------------------------------------------------------
+# =====================================================================
 @app.post(
     "/auth/register", 
     response_model=UserResponse, 
@@ -91,9 +108,9 @@ def register(user_create: UserCreate, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-# ------------------------------------------------------------------------------
+# =====================================================================
 # User Login Endpoints
-# ------------------------------------------------------------------------------
+# =====================================================================
 @app.post("/auth/login", response_model=TokenResponse, tags=["auth"])
 def login_json(user_login: UserLogin, db: Session = Depends(get_db)):
     """Login with JSON payload"""
@@ -145,9 +162,9 @@ def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
         "token_type": "bearer"
     }
 
-# ------------------------------------------------------------------------------
+# =====================================================================
 # Calculations Endpoints (BREAD)
-# ------------------------------------------------------------------------------
+# =====================================================================
 # Create (Add) Calculation – using CalculationBase so that 'user_id' from the client is ignored.
 @app.post(
     "/calculations",
@@ -264,9 +281,9 @@ def delete_calculation(
     db.commit()
     return None
 
-# ------------------------------------------------------------------------------
+# =====================================================================
 # Main Block to Run the Server
-# ------------------------------------------------------------------------------
+# =====================================================================
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="127.0.0.1", port=8001, log_level="info")

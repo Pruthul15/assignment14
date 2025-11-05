@@ -1,0 +1,150 @@
+{% extends "layout.html" %}
+
+{% block title %}View Calculation{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">View Calculation</h1>
+            <p class="text-gray-600">ID: <span class="font-mono text-indigo-600" id="calcId">{{ calc_id }}</span></p>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loading" class="text-center py-12">
+            <div class="inline-block">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                <p class="text-gray-600 mt-4">Loading calculation...</p>
+            </div>
+        </div>
+
+        <!-- Calculation Card -->
+        <div id="content" class="hidden bg-white rounded-lg shadow-lg p-8 mb-6">
+            <!-- Operation Type -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Operation Type</label>
+                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-3">
+                    <p class="text-lg font-bold text-indigo-600" id="operationType">-</p>
+                </div>
+            </div>
+
+            <!-- Inputs -->
+            <div id="inputsContainer" class="mb-6">
+                <!-- Dynamically populated -->
+            </div>
+
+            <!-- Result -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Result</label>
+                <div class="bg-green-50 border-2 border-green-300 rounded-lg p-3">
+                    <p class="text-2xl font-bold text-green-600" id="result">-</p>
+                </div>
+            </div>
+
+            <!-- Created Date -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Created</label>
+                <div class="bg-gray-50 border-2 border-gray-200 rounded-lg p-3">
+                    <p class="text-gray-600" id="createdAt">-</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-4 mt-8">
+                <!-- Back Button -->
+                <a href="/dashboard" 
+                   class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 text-center">
+                    ← Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error" class="hidden bg-red-50 border-2 border-red-300 rounded-lg p-4">
+            <p class="text-red-600 font-semibold">Error: <span id="errorMessage"></span></p>
+            <a href="/dashboard" class="text-red-600 underline mt-4 block">← Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadCalculation() {
+    const calcId = '{{ calc_id }}';
+    const token = localStorage.getItem('access_token');
+
+    if (!token) {
+        showError('Not authenticated. Please log in.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/calculations/${calcId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error('Session expired. Please log in again.');
+            }
+            throw new Error(`Failed to load calculation`);
+        }
+
+        const calculation = await response.json();
+        displayCalculation(calculation);
+    } catch (error) {
+        console.error('Error:', error);
+        showError(error.message);
+    }
+}
+
+function displayCalculation(calc) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+
+    // Set operation type
+    document.getElementById('operationType').textContent = calc.type;
+
+    // Display inputs
+    const inputsContainer = document.getElementById('inputsContainer');
+    inputsContainer.innerHTML = '';
+
+    if (Array.isArray(calc.inputs) && calc.inputs.length > 0) {
+        const inputGrid = document.createElement('div');
+        inputGrid.className = 'grid grid-cols-2 gap-4';
+
+        calc.inputs.forEach((input, index) => {
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Input ${index + 1}</label>
+                <div class="bg-gray-50 border-2 border-gray-200 rounded-lg p-3">
+                    <p class="text-lg font-mono text-gray-800">${input}</p>
+                </div>
+            `;
+            inputGrid.appendChild(div);
+        });
+
+        inputsContainer.appendChild(inputGrid);
+    }
+
+    // Set result
+    document.getElementById('result').textContent = calc.result;
+
+    // Format and set date
+    const createdDate = new Date(calc.created_at);
+    document.getElementById('createdAt').textContent = createdDate.toLocaleString();
+}
+
+function showError(message) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('content').classList.add('hidden');
+    document.getElementById('error').classList.remove('hidden');
+    document.getElementById('errorMessage').textContent = message;
+}
+
+// Load calculation when page loads
+document.addEventListener('DOMContentLoaded', loadCalculation);
+</script>
+{% endblock %}
