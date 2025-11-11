@@ -1,47 +1,44 @@
 """
 FINAL FIXED Test Suite - Correct operation names (addition, subtraction, multiplication, division)
 """
+
+
 import pytest
+import time
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from uuid import uuid4
+
+
+from app.core.config import settings
+from app.database import get_engine, get_sessionmaker
 
 
 @pytest.fixture(scope="session")
 def test_db():
-    DATABASE_URL = "sqlite:///./test.db"
-    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-    
-    try:
-        from app.database import Base
-        Base.metadata.create_all(bind=engine)
-    except:
-        pass
-    
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    engine = get_engine(database_url=settings.DATABASE_URL)
+    from app.database import Base
+    Base.metadata.create_all(bind=engine)
+    TestingSessionLocal = get_sessionmaker(engine=engine)
     yield engine, TestingSessionLocal
-    
-    # Don't drop tables - let them persist for all tests in the session
 
 
 @pytest.fixture(scope="session")
 def client(test_db):
     from app.main import app
     from app.database import get_db
-    
+
     engine, TestingSessionLocal = test_db
-    
+
     def override_get_db():
         db = TestingSessionLocal()
         yield db
         db.close()
-    
+
     app.dependency_overrides[get_db] = override_get_db
-    
+
     with TestClient(app) as test_client:
         yield test_client
-    
+
     app.dependency_overrides.clear()
 
 
@@ -68,11 +65,12 @@ class TestUserAuthentication:
     
     def test_register_user_duplicate_email(self, client):
         """Test registration fails with duplicate email."""
+        unique_email = f"duplicate_{uuid4().hex[:8]}@example.com"
         client.post(
             "/auth/register",
             json={
-                "username": "user1",
-                "email": "duplicate@example.com",
+                "username": f"user1_{uuid4().hex[:8]}",
+                "email": unique_email,
                 "password": "Password123!",
                 "confirm_password": "Password123!",
                 "first_name": "User",
@@ -82,8 +80,8 @@ class TestUserAuthentication:
         response = client.post(
             "/auth/register",
             json={
-                "username": "user2",
-                "email": "duplicate@example.com",
+                "username": f"user2_{uuid4().hex[:8]}",
+                "email": unique_email,
                 "password": "Password123!",
                 "confirm_password": "Password123!",
                 "first_name": "User",
