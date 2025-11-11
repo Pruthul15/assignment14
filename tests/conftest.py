@@ -1,3 +1,9 @@
+# tests/conftest.py
+import os
+print("DATABASE_URL ENV in conftest.py:", os.environ.get("DATABASE_URL"))
+
+import dotenv
+dotenv.load_dotenv(".env") 
 import socket
 import subprocess
 import time
@@ -10,12 +16,18 @@ import requests
 from faker import Faker
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import event
 from playwright.sync_api import sync_playwright, Browser, Page
+from fastapi.testclient import TestClient
 
-from app.database import Base, get_engine, get_sessionmaker
+from app.database import Base, get_engine, get_sessionmaker, get_db
 from app.models.user import User
 from app.core.config import settings
 from app.database_init import init_db, drop_db
+from app.main import app
+
+print("conftest.py USING DATABASE_URL:", settings.DATABASE_URL)
+
 
 # ======================================================================================
 # Logging Configuration
@@ -111,8 +123,8 @@ def setup_test_database(request):
 @pytest.fixture
 def db_session() -> Generator[Session, None, None]:
     """
-    Provide a test-scoped database session. Commits after a successful test;
-    rolls back if an exception occurs.
+    Provide a test-scoped database session for direct database testing.
+    Commits after a successful test; rolls back if an exception occurs.
     """
     session = TestingSessionLocal()
     try:
@@ -123,6 +135,53 @@ def db_session() -> Generator[Session, None, None]:
         raise
     finally:
         session.close()
+
+# ======================================================================================
+# *** CRITICAL FIX: TestClient Fixture with Dependency Override ***
+# ======================================================================================
+@pytest.fixture
+def client() -> Generator[TestClient, None, None]:
+    """
+    Provide a TestClient with a SINGLE, SHARED database session for the entire test.
+    
+    THIS FIXTURE FIXES THE DUPLICATE EMAIL TEST FAILURE!
+    
+    KEY POINTS:
+    - Drop and recreate tables BEFORE each test (fresh state)
+    - Create ONE session that all HTTP requests within the test will use
+    - Override get_db() dependency so the app uses this test session
+    - This ensures unique constraints are properly enforced between requests
+    
+    PROBLEM IT SOLVES:
+    Before: Each request → new session → constraints don't see each other
+    After:  All requests → same session → constraints properly enforced
+    """
+    # Clean database before this test
+    Base.metadata.drop_all(bind=test_engine)
+    Base.metadata.create_all(bind=test_engine)
+    
+    # Create a SINGLE session for this entire test
+    session = TestingSessionLocal()
+    
+    # Override get_db to return our test session
+    def override_get_db():
+        try:
+            yield session
+        finally:
+            pass  # Don't close - we manage it explicitly
+    
+    # Apply the override
+    app.dependency_overrides[get_db] = override_get_db
+    
+    # Create TestClient with the app (now using our overridden get_db)
+    test_client = TestClient(app)
+    
+    try:
+        yield test_client
+    finally:
+        # Clean up
+        session.close()
+        app.dependency_overrides.clear()
 
 # ======================================================================================
 # Test Data Fixtures
