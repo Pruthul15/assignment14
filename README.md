@@ -1,66 +1,126 @@
-# Assignment 13: JWT Authentication & CI/CD Pipeline
+# Assignment 14: BREAD Functionality for Calculations
 
 ## 📋 Project Overview
 
-This project implements a complete JWT-based authentication system for a FastAPI calculator application. It includes user registration/login, secure password hashing, front-end forms with client-side validation, comprehensive E2E tests, and a full CI/CD pipeline with Docker and GitHub Actions.
+This project extends the JWT-authenticated FastAPI calculator application with complete **BREAD (Browse, Read, Edit, Add, Delete)** functionality for calculation data. It includes comprehensive Playwright E2E tests covering all BREAD operations, a full CI/CD pipeline with GitHub Actions, and Docker deployment ready for production.
 
 ## 🎯 Key Features
 
+- ✅ **BREAD Operations** - Full Browse, Read, Edit, Add, Delete for calculations
 - ✅ **JWT Authentication** - Secure token-based authentication
 - ✅ **User Registration** - Email and username validation with password hashing
 - ✅ **User Login** - Credential verification and JWT token generation
-- ✅ **Front-End Pages** - HTML forms for registration, login, and dashboard
-- ✅ **Protected Routes** - Dashboard accessible only to authenticated users
-- ✅ **Playwright E2E Tests** - Comprehensive browser automation tests
-- ✅ **CI/CD Pipeline** - Automated testing and Docker Hub deployment
-- ✅ **Code Coverage** - 66%+ coverage with unit and integration tests
+- ✅ **Front-End Dashboard** - Interactive HTML interface for BREAD operations
+- ✅ **Playwright E2E Tests** - 3 comprehensive browser automation tests (all passing ✓)
+- ✅ **CI/CD Pipeline** - Automated testing and Docker Hub deployment via GitHub Actions
+- ✅ **Code Coverage** - 125+ passing Python unit/integration tests
+- ✅ **venv Python Support** - All tests and CI/CD use virtualenv Python
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Docker & Docker Compose
-- Python 3.10+
+- Python 3.9+
+- Node.js 16+ (for Playwright)
 - Git
+- (Optional) Docker & Docker Compose
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/Pruthul15/assignment13.git
-cd assignment13
+git clone https://github.com/Pruthul15/assignment14.git
+cd assignment14
 
 # Create virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
-# Install dependencies
+# Install Python dependencies
 pip install -r requirements.txt
+
+# Install Node dependencies (for Playwright)
+npm install
+npx playwright install
 ```
+
+## 🧪 Running Tests
+
+### Python Unit & Integration Tests
+
+```bash
+# Activate virtual environment
+source venv/bin/activate
+
+# Run all Python tests
+pytest -q
+
+# Run with verbose output
+pytest -v
+
+# Run with coverage
+pytest --cov=app --cov-report=term-missing
+```
+
+### Playwright E2E Tests
+
+#### Option 1: Using the helper script (Recommended - uses venv Python)
+
+```bash
+# Start server (with venv Python) and run Playwright tests
+npm run e2e
+
+# Run single test (pass any Playwright args after --)
+npm run e2e -- tests/e2e/bread-calculation.spec.js:120 --reporter=list
+```
+
+#### Option 2: Manual (separate terminals)
+
+Terminal 1 - Start FastAPI server:
+```bash
+source venv/bin/activate
+./venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
+```
+
+Terminal 2 - Run Playwright tests:
+```bash
+npx playwright test tests/e2e/bread-calculation.spec.js --reporter=list --workers=1
+```
+
+### Test Results Summary
+
+**Python Tests:** 125+ passing (pytest)
+- Unit tests for auth, models, schemas
+- Integration tests for API endpoints
+- Database tests for CRUD operations
+
+**Playwright E2E Tests:** 3 passing (100%)
+- ✓ Register → Login (positive + negative scenarios)
+- ✓ Add, browse, read, edit, delete calculations (positive flows)
+- ✓ Invalid inputs and unauthorized access (negative scenarios)
 
 ## 🐳 Running with Docker
 
 ### Start the Application
 
 ```bash
-# Build and start all containers
+# Build and start containers
 docker-compose up -d
 
-# Wait for services to start (about 15 seconds)
-sleep 15
+# Wait for services to start
+sleep 5
 
 # Verify app is running
-curl http://localhost:8000/health
+curl http://localhost:8001/health
 ```
 
 ### Access the Application
 
-- **Home Page:** http://localhost:8000/
-- **Register:** http://localhost:8000/register
-- **Login:** http://localhost:8000/login
-- **Dashboard:** http://localhost:8000/dashboard (requires login)
-- **API Docs:** http://localhost:8000/docs
-- **pgAdmin:** http://localhost:5050
+- **Home Page:** http://localhost:8001/
+- **Register:** http://localhost:8001/register
+- **Login:** http://localhost:8001/login
+- **Dashboard:** http://localhost:8001/dashboard (requires login)
+- **API Docs:** http://localhost:8001/docs
 
 ### Stop the Application
 
@@ -68,52 +128,66 @@ curl http://localhost:8000/health
 docker-compose down
 ```
 
-## 🧪 Running Tests
+## 🍞 BREAD Operations
 
-### Activate Virtual Environment
+### Browse (GET /calculations)
+Retrieve all calculations for the authenticated user.
 
 ```bash
-source venv/bin/activate
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  http://localhost:8001/calculations
 ```
 
-### Run All Tests
-
-```bash
-# Run all tests with coverage
-pytest -v --tb=short
-
-# Expected: 99 PASSED
+**Response:**
+```json
+[
+  {
+    "id": "uuid",
+    "type": "addition",
+    "inputs": [7, 3],
+    "result": 10,
+    "created_at": "2025-11-23T12:00:00Z"
+  }
+]
 ```
 
-### Run Only E2E Tests
+### Read (GET /calculations/{id})
+Retrieve details of a specific calculation.
 
 ```bash
-# Run Playwright E2E tests
-pytest tests/e2e/ -v --tb=short
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  http://localhost:8001/calculations/uuid
 ```
 
-### Run Only Unit Tests
+### Add (POST /calculations)
+Create a new calculation.
 
 ```bash
-# Run unit tests
-pytest tests/unit/ -v --tb=short
+curl -X POST \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "addition", "inputs": [7, 3]}' \
+  http://localhost:8001/calculations
 ```
 
-### Run Only Integration Tests
+### Edit (PUT /calculations/{id})
+Update an existing calculation's inputs.
 
 ```bash
-# Run integration tests
-pytest tests/integration/ -v --tb=short
+curl -X PUT \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"inputs": [8, 2]}' \
+  http://localhost:8001/calculations/uuid
 ```
 
-### View Coverage Report
+### Delete (DELETE /calculations/{id})
+Remove a calculation.
 
 ```bash
-# Generate and display coverage report
-pytest --cov=app --cov-report=term-missing
-
-# Open HTML coverage report
-open htmlcov/index.html
+curl -X DELETE \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  http://localhost:8001/calculations/uuid
 ```
 
 ## 🔐 API Endpoints
@@ -130,18 +204,8 @@ Content-Type: application/json
   "email": "user@example.com",
   "first_name": "John",
   "last_name": "Doe",
-  "password": "SecurePass@123",
-  "confirm_password": "SecurePass@123"
-}
-```
-
-**Response:** `201 Created`
-```json
-{
-  "id": "uuid",
-  "username": "newuser",
-  "email": "user@example.com",
-  "is_active": true
+  "password": "SecurePass123!",
+  "confirm_password": "SecurePass123!"
 }
 ```
 
@@ -152,104 +216,111 @@ Content-Type: application/json
 
 {
   "username": "newuser",
-  "password": "SecurePass@123"
+  "password": "SecurePass123!"
 }
 ```
 
-**Response:** `200 OK`
+**Response:**
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIs...",
   "refresh_token": "eyJhbGciOiJIUzI1NiIs...",
   "token_type": "bearer",
-  "expires_at": "2025-11-05T04:26:11Z"
+  "expires_at": "2025-11-23T12:30:00Z",
+  "user_id": "uuid",
+  "username": "newuser",
+  "email": "user@example.com"
 }
 ```
 
-## 🧑‍💻 Using the Web Interface
+## 🧑‍💻 Using the Web Dashboard
 
-### Register a New User
-
-1. Go to http://localhost:8000/register
-2. Fill in the form:
-   - Username
-   - Email (valid format required)
-   - First Name
-   - Last Name
-   - Password (8+ chars, uppercase, lowercase, digit, special char)
-   - Confirm Password
-3. Click Register
-4. On success, redirects to login page
+### Register
+1. Go to http://localhost:8001/register
+2. Fill in form with valid credentials
+3. Click Register → redirects to login page
 
 ### Login
-
-1. Go to http://localhost:8000/login
+1. Go to http://localhost:8001/login
 2. Enter username and password
-3. Click Login
-4. On success, redirects to dashboard with JWT token stored in localStorage
+3. Click Sign in → redirects to dashboard
 
-### Dashboard
+### Dashboard - Add Calculation
+1. Select operation type (Addition, Subtraction, Multiplication, Division)
+2. Enter numbers (comma-separated)
+3. Click Calculate
+4. Result appears in history table
 
-1. After login, you're on the dashboard
-2. Can create calculations:
-   - Select operation type (Addition, Subtraction, etc.)
-   - Enter numbers
-   - Click Calculate
-3. View calculation history
-4. Delete calculations
-5. Click Logout to exit
+### Dashboard - Browse/View
+- All your calculations appear in the history table
+- Click "View" to see calculation details
 
-## 🔑 Password Requirements
+### Dashboard - Edit
+1. Click "Edit" on any calculation
+2. Modify the numbers
+3. Click Update
+4. Result is recalculated automatically
 
-Passwords must contain:
-- ✅ Minimum 8 characters
-- ✅ At least one uppercase letter
-- ✅ At least one lowercase letter
-- ✅ At least one digit
-- ✅ At least one special character (!@#$%^&*, etc.)
+### Dashboard - Delete
+1. Click "Delete" on any calculation
+2. Confirm deletion
+3. Calculation is removed from history
 
 ## 📊 Technology Stack
 
 | Layer | Technology |
 |-------|-----------|
-| **Backend** | FastAPI, SQLAlchemy, PostgreSQL |
+| **Backend** | FastAPI, SQLAlchemy, SQLite/PostgreSQL |
 | **Frontend** | Jinja2, HTML5, CSS3, JavaScript |
 | **Authentication** | JWT (HS256), bcrypt |
-| **Testing** | pytest, Playwright, pytest-cov |
+| **E2E Testing** | Playwright (JavaScript) |
+| **Python Testing** | pytest, pytest-cov |
 | **DevOps** | Docker, Docker Compose, GitHub Actions |
-| **Cache** | Redis |
+| **Package Mgmt** | pip (Python), npm (Node.js) |
 
 ## 🔄 CI/CD Pipeline
 
-### GitHub Actions Workflow
+### GitHub Actions Workflow (`.github/workflows/ci.yml`)
 
-The pipeline automatically runs on every push to main branch:
+Runs automatically on push to `main` branch:
 
-1. **Test Job** (runs in ~5 min)
-   - Spins up PostgreSQL and Redis containers
-   - Runs all 99 tests
-   - Calculates code coverage
-   - Uploads coverage report
+1. **Setup** (30 sec)
+   - Python 3.11 + Node.js 20
+   - Install dependencies
 
-2. **Security Job** (runs in ~2 min)
-   - Builds Docker image
-   - Scans with Trivy for vulnerabilities
-   - Uploads results
+2. **Start FastAPI App** (10 sec)
+   - Uvicorn runs on 127.0.0.1:8001
+   - Tables created on startup
+   - Health check verifies server
 
-3. **Deploy Job** (runs in ~3 min)
-   - Logs into Docker Hub
-   - Pushes image with `latest` and git SHA tags
-   - Updates Docker Hub repository
+3. **Run Python Tests** (30 sec)
+   - `pytest -q` runs all unit/integration tests
 
-4. **Notify Job** (runs in ~1 min)
-   - Summarizes pipeline status
+4. **Run Playwright E2E Tests** (60 sec)
+   - `npx playwright test` runs all 3 E2E tests
+   - Headless mode, single worker
+   - 60-second timeout per test
 
-**View workflows:** https://github.com/Pruthul15/assignment13/actions
+5. **Docker Build & Push** (90 sec, requires secrets)
+   - Build image: `pruthul123/assignment14:COMMIT_SHA`
+   - Push with tags: `:latest` and `:COMMIT_SHA`
+   - **Requires secrets:**
+     - `DOCKERHUB_USERNAME`
+     - `DOCKERHUB_TOKEN`
+
+**View workflow:** https://github.com/Pruthul15/assignment14/actions
+
+### Set Up Docker Hub Secrets
+
+1. Go to **Settings** → **Secrets and variables** → **Actions**
+2. Click **New repository secret**
+3. Add `DOCKERHUB_USERNAME` = your Docker Hub username
+4. Add `DOCKERHUB_TOKEN` = your Docker Hub access token (generate in Docker Hub settings)
 
 ## 🐳 Docker Hub
 
 Docker image is automatically pushed to:
-- **Repository:** https://hub.docker.com/r/pruthul123/assignment13
+- **Repository:** https://hub.docker.com/r/pruthul123/assignment14
 - **Tags:**
   - `latest` - Most recent build
   - `<git-sha>` - Specific commit version
@@ -258,27 +329,27 @@ Docker image is automatically pushed to:
 
 ```bash
 # Pull the image
-docker pull pruthul123/assignment13:latest
+docker pull pruthul123/assignment14:latest
 
 # Run the image
-docker run -p 8000:8000 \
-  -e DATABASE_URL="postgresql://..." \
+docker run -p 8001:8001 \
+  -e DATABASE_URL="sqlite:///./test.db" \
   -e JWT_SECRET_KEY="your-secret-key" \
-  pruthul123/assignment13:latest
+  pruthul123/assignment14:latest
 ```
 
 ## 📁 Project Structure
 
 ```
-assignment13/
+assignment14/
 ├── app/
 │   ├── auth/              # Authentication logic
 │   │   ├── jwt.py        # JWT token generation
-│   │   ├── dependencies.py # Auth dependencies
-│   │   └── redis.py      # Token blacklisting
+│   │   ├── dependencies.py # Auth middleware
+│   │   └── redis.py      # Token blacklisting (optional)
 │   ├── models/
 │   │   ├── user.py       # User model with auth methods
-│   │   └── calculation.py # Calculation models (polymorphic)
+│   │   └── calculation.py # Calculation model (polymorphic)
 │   ├── schemas/
 │   │   ├── user.py       # Pydantic user schemas
 │   │   ├── token.py      # Token schemas
@@ -287,11 +358,14 @@ assignment13/
 │   │   └── config.py     # Configuration
 │   ├── database.py       # Database setup
 │   ├── database_init.py  # Table initialization
-│   └── main.py           # FastAPI app
+│   └── main.py           # FastAPI app with BREAD endpoints
 ├── templates/
 │   ├── register.html     # Registration page
 │   ├── login.html        # Login page
-│   ├── dashboard.html    # Dashboard (protected)
+│   ├── dashboard.html    # Dashboard (protected, BREAD UI)
+│   ├── view_calculation.html
+│   ├── edit_calculation.html
+│   ├── delete_calculation.html
 │   ├── layout.html       # Base template
 │   └── index.html        # Home page
 ├── static/
@@ -300,115 +374,133 @@ assignment13/
 ├── tests/
 │   ├── unit/            # Unit tests
 │   ├── integration/      # Integration tests
-│   ├── e2e/             # End-to-end tests
+│   ├── e2e/             # Playwright E2E tests (3 passing)
+│   │   └── bread-calculation.spec.js
 │   └── conftest.py      # Pytest configuration
+├── scripts/
+│   └── run_e2e.sh       # Helper to run E2E tests with venv Python
 ├── .github/
 │   └── workflows/
-│       └── test.yml     # GitHub Actions workflow
+│       └── ci.yml       # GitHub Actions CI/CD
 ├── docker-compose.yml    # Multi-container setup
 ├── Dockerfile           # Docker image
+├── playwright.config.js  # Playwright configuration
+├── package.json         # npm scripts (e2e, test)
 ├── requirements.txt     # Python dependencies
 └── README.md           # This file
-```
-
-## 🧹 Database Initialization
-
-Tables are automatically created on application startup:
-
-```bash
-# Manual initialization (if needed)
-docker-compose exec web python -m app.database_init
 ```
 
 ## 🔒 Security Features
 
 - ✅ **Password Hashing** - bcrypt with salt
 - ✅ **JWT Tokens** - HS256 algorithm with 30-min expiration
-- ✅ **CORS** - Properly configured for cross-origin requests
-- ✅ **SQL Injection Prevention** - SQLAlchemy parameterized queries
-- ✅ **Token Blacklisting** - Redis-backed token invalidation
 - ✅ **Protected Routes** - Dependency injection for auth checks
+- ✅ **SQL Injection Prevention** - SQLAlchemy parameterized queries
+- ✅ **User-Specific Data** - Calculations filtered by user_id
 
 ## 🐛 Troubleshooting
 
 ### Port Already in Use
 
-If port 5432 or 8000 is already in use:
-
 ```bash
-# Change Docker port (edit docker-compose.yml)
-sed -i 's/5432:5432/5433:5432/g' docker-compose.yml
-sed -i 's/:5432/:5433/g' app/core/config.py
+# Check what's using port 8001
+lsof -i :8001
 
-# Then restart
-docker-compose down && docker-compose up -d
+# Kill process (if needed)
+kill -9 <PID>
+
+# Or use a different port
+./venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8002
 ```
 
-### Database Connection Error
+### Playwright Tests Timeout
 
 ```bash
-# Reinitialize database
-docker-compose exec web python -m app.database_init
+# Ensure server is running first
+./venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
 
-# Or restart all containers
-docker-compose restart
+# Then run tests with higher timeout
+npx playwright test tests/e2e/bread-calculation.spec.js --timeout=120000
 ```
 
-### Tests Failing
+### Tests Failing with "Target page closed"
 
 ```bash
+# Kill any lingering processes
+pkill -f uvicorn
+pkill -f playwright
+
 # Clean up and restart
-docker-compose down -v
-docker-compose up -d
-sleep 15
-pytest -v --tb=short
+rm -rf .pytest_cache test-results/
+npm run e2e
 ```
 
 ## 📝 Environment Variables
 
-Create a `.env` file for local development:
+For local development (optional `.env` file):
 
 ```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fastapi_db
-JWT_SECRET_KEY=your-super-secret-key-change-this
+DATABASE_URL=sqlite:///./test.db
+JWT_SECRET_KEY=your-super-secret-key-change-this-in-production
 JWT_REFRESH_SECRET_KEY=your-refresh-secret-key
 ALGORITHM=HS256
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=fastapi_db
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
 ```
 
-## 🎯 Assignment Requirements Met
+## ✅ Assignment Requirements Met
 
-### 1. JWT Authentication ✅
-- ✅ `/register` endpoint validates and stores users
-- ✅ `/login` endpoint authenticates and returns JWT
-- ✅ Pydantic validation on all inputs
-- ✅ Password hashing with bcrypt
+### 1. BREAD Endpoints ✅
+- ✅ Browse: `GET /calculations` - list all user's calculations
+- ✅ Read: `GET /calculations/{id}` - get specific calculation
+- ✅ Edit: `PUT /calculations/{id}` - update calculation inputs
+- ✅ Add: `POST /calculations` - create new calculation
+- ✅ Delete: `DELETE /calculations/{id}` - remove calculation
 
-### 2. Front-End Integration ✅
-- ✅ Register page with HTML form
-- ✅ Login page with HTML form
-- ✅ Dashboard page (protected)
-- ✅ Client-side validation
-- ✅ JWT stored in localStorage
+### 2. Front-End Functionality ✅
+- ✅ Dashboard with add/edit/delete forms
+- ✅ Client-side validation for numeric inputs
+- ✅ Calculation history table with actions
+- ✅ Toast alerts for success/error
 
 ### 3. Playwright E2E Tests ✅
-- ✅ Positive tests: Registration & login success
-- ✅ Negative tests: Invalid input handling
-- ✅ All 12 E2E tests passing
+- ✅ Test 1: Register → Login (positive + negative)
+- ✅ Test 2: Add, browse, read, edit, delete (positive flows)
+- ✅ Test 3: Invalid inputs, unauthorized access (negative)
+- ✅ All 3 tests passing ✓
 
-### 4. CI/CD Pipeline ✅
-- ✅ GitHub Actions workflow configured
-- ✅ All 99 tests pass automatically
-- ✅ Docker image pushed to Docker Hub
-- ✅ Security scanning with Trivy
+### 4. CI/CD Integration ✅
+- ✅ GitHub Actions workflow for pytest + Playwright
+- ✅ Docker image build and push to Docker Hub
+- ✅ Automated testing on every push
+- ✅ Uses venv Python for consistency
 
 ### 5. Documentation ✅
-- ✅ README with full instructions
-- ✅ REFLECTION.md with experiences
-- ✅ Inline code comments
+- ✅ This README with full instructions
+- ✅ REFLECTION.md with challenges/experiences
+- ✅ Inline code comments in key files
 - ✅ API endpoint documentation
+
+## 🚀 Quick Start Summary
+
+```bash
+# 1. Setup
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+npm install
+npx playwright install
+
+# 2. Test Python
+pytest -q
+
+# 3. Test E2E (start server + run Playwright)
+npm run e2e
+
+# 4. Run locally
+./venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
+# Visit http://localhost:8001
+```
 
 ## 👤 Author
 
@@ -422,10 +514,12 @@ MIT License - See LICENSE file for details
 
 ## 🔗 Links
 
-- **GitHub Repository:** https://github.com/Pruthul15/assignment13
-- **Docker Hub Repository:** https://hub.docker.com/r/pruthul123/assignment13
-- **GitHub Actions:** https://github.com/Pruthul15/assignment13/actions
-- **API Documentation:** http://localhost:8000/docs (when running locally)
+- **GitHub Repository:** https://github.com/Pruthul15/assignment14
+- **Docker Hub Repository:** https://hub.docker.com/r/pruthul123/assignment14
+- **GitHub Actions:** https://github.com/Pruthul15/assignment14/actions
+- **API Documentation:** http://localhost:8001/docs (when running locally)
 
 ---
+
+**Status:** ✅ All BREAD operations implemented, all E2E tests passing, CI/CD pipeline ready
 
