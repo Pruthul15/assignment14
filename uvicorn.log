@@ -27,3 +27,61 @@ INFO:     127.0.0.1:51370 - "POST /auth/register HTTP/1.1" 201 Created
 INFO:     127.0.0.1:51374 - "GET /login HTTP/1.1" 200 OK
 INFO:     127.0.0.1:56320 - "GET /dashboard HTTP/1.1" 200 OK
 INFO:     127.0.0.1:56320 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54580 - "POST /auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:54586 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36412 - "POST /auth/register HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:36412 - "POST /auth/register HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:36412 - "POST /auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:36418 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36420 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36420 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36420 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36420 - "GET /calculations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39890 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39890 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36432 - "POST /calculations HTTP/1.1" 201 Created
+INFO:     127.0.0.1:36432 - "GET /calculations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36432 - "GET /view-calculation/02f288cd-c184-459e-af1d-923e30e95e9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36432 - "GET /calculations/02f288cd-c184-459e-af1d-923e30e95e9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36432 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36432 - "GET /calculations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36432 - "DELETE /calculations/9db28150-961e-4cc1-bf9c-d70fae23078f HTTP/1.1" 204 No Content
+INFO:     127.0.0.1:36432 - "GET /calculations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42560 - "POST /auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:42568 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43142 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43142 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38658 - "POST /auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:38664 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58318 - "POST /auth/register HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:58318 - "POST /auth/register HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:58318 - "POST /auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:58324 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56976 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56976 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57798 - "POST /auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:57808 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54064 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54064 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43152 - "POST /auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:43168 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60296 - "POST /auth/register HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:60296 - "POST /auth/register HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:60296 - "POST /auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:60304 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48244 - "POST /auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:48248 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34712 - "POST /auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:34720 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60680 - "POST /auth/register HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:60680 - "POST /auth/register HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:60680 - "POST /auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:60696 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34192 - "POST /calculations HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:34202 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34202 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34192 - "POST /auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:34216 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50854 - "POST /calculations HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:50864 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50864 - "GET /login HTTP/1.1" 200 OK
