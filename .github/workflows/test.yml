@@ -127,7 +127,7 @@ jobs:
     needs: security
     if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
     runs-on: ubuntu-latest
-
+    
     steps:
       - uses: actions/checkout@v4
       
