@@ -11,16 +11,16 @@ jobs:
   test:
     runs-on: ubuntu-latest
     services:
-      postgres:
-        image: postgres:latest
+      db:
+        image: postgres:17
         env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: mytestdb
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fastapi_db
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd pg_isready -U postgres -d fastapi_db
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -31,17 +31,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-          
-      - uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
       
       - name: Install dependencies
         env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/mytestdb
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fastapi_db
         run: |
           python -m venv venv
           source venv/bin/activate
@@ -51,10 +44,10 @@ jobs:
       
       - name: Run tests
         env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/mytestdb
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fastapi_db
         run: |
           source venv/bin/activate
-          pytest tests/unit/ --cov=app --junitxml=test-results/junit.xml
+          pytest tests/unit/ --cov=app
           pytest tests/integration/
           npx playwright test tests/e2e/bread-calculation.spec.js --workers=1 --timeout=60000
 
@@ -95,8 +88,8 @@ jobs:
         with:
           push: true
           tags: |
-            <your_dockerhub_username>/assignment14:latest
-            <your_dockerhub_username>/assignment14:${{ github.sha }}
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=registry,ref=<your_dockerhub_username>/assignment14:cache
+            pruthul123/assignment14:latest
+            pruthul123/assignment14:${{ github.sha }}
+          platforms: linux/amd64
+          cache-from: type=registry,ref=pruthul123/assignment14:cache
           cache-to: type=inline,mode=max
