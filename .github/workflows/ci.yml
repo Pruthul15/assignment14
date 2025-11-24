@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-e2e:
+    runs-on: ubuntu-latest
+    services: {}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright (npm deps)
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Start API (uvicorn)
+        run: |
+          # start uvicorn in background; tables will be created on app startup
+          nohup python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 > uvicorn.log 2>&1 &
+          # wait for health endpoint
+          for i in {1..30}; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8001/ || true)
+            if [ "$status" = "200" ]; then
+              echo "App ready"; break
+            fi
+            sleep 1
+          done
+
+      - name: Run Python tests (pytest)
+        env:
+          PYTHONPATH: .
+        run: |
+          pytest -q
+
+      - name: Run Playwright E2E tests
+        run: |
+          # run e2e tests headless and single worker for CI stability
+          npx playwright test tests/e2e/bread-calculation.spec.js --reporter=list --workers=1 --timeout=60000
+
+      - name: Build and push Docker image
+        if: github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/assignment14:${{ github.sha }}
+          file: Dockerfile
+
+  publish-to-dockerhub:
+    needs: test-and-e2e
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/assignment14:latest,${{ secrets.DOCKERHUB_USERNAME }}/assignment14:${{ github.sha }}
+          file: Dockerfile
